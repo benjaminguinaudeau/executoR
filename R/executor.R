@@ -130,16 +130,18 @@ executor <- R6::R6Class(
         cat(capture.output(select(tasks, -start)), sep = "\n")
 
 
-        ## Scheduled
-        tasks %>%
-          dplyr::filter(!infinite_loop) %>%
-          split(1:nrow(.)) %>%
-          purrr::walk(~{
-            if(scheduled_at(period = .x$period, start = .x$start)){
-              cli::cli_alert_info("Starting scheduled {.x$name}")
-              self$start_task(.x$name)
-            }
-          })
+        if(any(!tasks$infinite_loop)){
+          ## Scheduled
+          tasks %>%
+            dplyr::filter(!infinite_loop) %>%
+            split(1:nrow(.)) %>%
+            purrr::walk(~{
+              if(scheduled_at(period = .x$period, start = .x$start)){
+                cli::cli_alert_info("Starting scheduled {.x$name}")
+                self$start_task(.x$name)
+              }
+            })
+        }
 
 
         ## Infinite Loop

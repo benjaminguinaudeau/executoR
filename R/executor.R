@@ -95,7 +95,7 @@ executor <- R6::R6Class(
       self$tasks$name %>% purrr::walk(~self$stop_task(.x))
     },
     read_out = function(name, n_tail = NULL){
-      out <- readr::read_lines(glue::glue("{self$folder}/{name}.txt"))
+      out <- readr::read_lines(glue::glue("{self$folder}/{name}_{lubridate::today()}.txt"))
       if(!is.null(n_tail)){ out <- out %>% tail(n_tail)}
       return(out)
     },

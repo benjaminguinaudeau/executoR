@@ -19,43 +19,45 @@ devtools::load_all()
 
 ## General Description
 
-Executor orchestrates skript and emulates similar function to rstudio jobs, which can be executed in any rsession (even if rstudio is not running)
-
-It entails one R6 class, which has a unique id. When executing a script, this unique_id is provided as an environment variable, so that two different executors can execute the same script at the same time, without mixing up (you can kill one without killing the other)
+Executor orchestrates scripts: it can run, schedule and restart the execution of scripts. Scripts are executed in the background (similarly to rstudio jobs). Executor (unlike rstudio jobs) can be used in any environment, even if rstudio is not running. 
 
 To create an instance, you simply need to specify a folder, where all skript logs will be saved and an executor_id. If you don't specify an id, a random one will be automatically attributed. 
 
 ```{r}
 # Random ID
-exec_model <- executor$new(folder = "test")
+exec_model <- executor$new(folder = "exec_test")
 exec_model$ex_id
 
 # Specified id
-exec_model <- executor$new(folder = "test", exec_id = "xg15")
+exec_model <- executor$new(folder = "exec_test", exec_id = "xg15")
 exec_model$ex_id
 
 
 ```
+
 ## Workflow
 
-To execute a task, you need to perform two different actions: 
+To execute a task, you need to: 
 
-1. Adding the task to the executor
-2. Starting the task
+1. Register the task in the executor
+2. Start the task
 
 ### Adding tasks
 
-Differntiating these two steps will allow to stop and restart tasks (eventually, this will be used to implement schedules)
+A task is basically a script and a name. Within one executof two tasks cannot have the same name. 
 
 To add a task to an existing executor, you need to specify at least two arguments: 
 
 + a name: general description of the task, that will be used as an id internally
 + a script path: a path to the script that should be executed
 
-You can eventually specify two further arguments
+You can eventually specify further arguments
 
 + wd: the working directory for the script
 + env: environment variables that should be provided to the script. This can be used to parametrize scripts. 
++ infinite_loop: when True (default), the task will be restarted each times an errors occurs
++ period: a string specifying how often the task should executed. "1 hour" to execute the task every hour ; "1 day" for every day ; etc..
++ start: a timestamp specifying when the interval should start. To execute a task once a day at 13:00, use period = "1 day" and start = lubridate::as_datetime("2021-02-27 13:00:00")
 
 
 ```{r}
@@ -88,11 +90,13 @@ exec_model$stop_all()
 
 ```
 
-If you want to go to sleep and make sure, scripts restart if they break, you can start a forever loop, that will restart all failed tasks every `n` seconds. 
+### Running the executor
 
-```{r}
+To make sure, the scheduled script are correctly executed or breaking scripts are restarted, the executor needs to be runned. This will basically check every 60 seconds, if a script that should be running is running. In doing so, it will run script that were scheduled for the past 60 seconds and restart scripts that are forever loops. 
+
+```{r, eval = F}
 sleep <- 60 # in seconds
-# exec_model$keep_restarting(sleep = sleep) # forever loop, you'll need to stop this, once this is started
+exec_model$keep_restarting(sleep = sleep) # forever loop, you'll need to stop this, once this is started
 
 ```
 
@@ -132,6 +136,5 @@ If the script breaks and is restarted, the previous output is archived with a ti
 
 ```{r}
 exec_model$read_out(name = "LOL", n_tail = 50) %>% glimpse # Read the last 50 lines of the stream output of the task LOL
-
 ```
 

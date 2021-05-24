@@ -3,14 +3,10 @@
 
 ## General Description
 
-Executor orchestrates skript and emulates similar function to rstudio
-jobs, which can be executed in any rsession (even if rstudio is not
-running)
-
-It entails one R6 class, which has a unique id. When executing a script,
-this unique\_id is provided as an environment variable, so that two
-different executors can execute the same script at the same time,
-without mixing up (you can kill one without killing the other)
+Executor orchestrates scripts: it can run, schedule and restart the
+execution of scripts. Scripts are executed in the background (similarly
+to rstudio jobs). Executor (unlike rstudio jobs) can be used in any
+environment, even if rstudio is not running.
 
 To create an instance, you simply need to specify a folder, where all
 skript logs will be saved and an executor\_id. If you don’t specify an
@@ -18,27 +14,27 @@ id, a random one will be automatically attributed.
 
 ``` r
 # Random ID
-exec_model <- executor$new(folder = "test")
+exec_model <- executor$new(folder = "exec_test")
 exec_model$ex_id
-#> [1] "923096fb"
+#> [1] "c7eb7335"
 
 # Specified id
-exec_model <- executor$new(folder = "test", exec_id = "xg15")
+exec_model <- executor$new(folder = "exec_test", exec_id = "xg15")
 exec_model$ex_id
 #> [1] "xg15"
 ```
 
 ## Workflow
 
-To execute a task, you need to perform two different actions:
+To execute a task, you need to:
 
-1.  Adding the task to the executor
-2.  Starting the task
+1.  Register the task in the executor
+2.  Start the task
 
 ### Adding tasks
 
-Differntiating these two steps will allow to stop and restart tasks
-(eventually, this will be used to implement schedules)
+A task is basically a script and a name. Within one executof two tasks
+cannot have the same name.
 
 To add a task to an existing executor, you need to specify at least two
 arguments:
@@ -47,11 +43,18 @@ arguments:
     internally
   - a script path: a path to the script that should be executed
 
-You can eventually specify two further arguments
+You can eventually specify further arguments
 
   - wd: the working directory for the script
   - env: environment variables that should be provided to the script.
     This can be used to parametrize scripts.
+  - infinite\_loop: when True (default), the task will be restarted each
+    times an errors occurs
+  - period: a string specifying how often the task should executed. “1
+    hour” to execute the task every hour ; “1 day” for every day ; etc..
+  - start: a timestamp specifying when the interval should start. To
+    execute a task once a day at 13:00, use period = “1 day” and start =
+    lubridate::as\_datetime(“2021-02-27 13:00:00”)
 
 <!-- end list -->
 
@@ -97,31 +100,35 @@ exec_model$stop_task(name = "LOL")
 exec_model$stop_all()
 ```
 
-If you want to go to sleep and make sure, scripts restart if they break,
-you can start a forever loop, that will restart all failed tasks every
-`n` seconds.
+### Running the executor
+
+To make sure, the scheduled script are correctly executed or breaking
+scripts are restarted, the executor needs to be runned. This will
+basically check every 60 seconds, if a script that should be running is
+running. In doing so, it will run script that were scheduled for the
+past 60 seconds and restart scripts that are forever loops.
 
 ``` r
 sleep <- 60 # in seconds
-# exec_model$keep_restarting(sleep = sleep) # forever loop, you'll need to stop this, once this is started
+exec_model$keep_restarting(sleep = sleep) # forever loop, you'll need to stop this, once this is started
 ```
 
 An overall log is stored in a log vector
 
 ``` r
 exec_model$log
-#>  [1] "[ 2021-03-01 10:53:57 ] Initializing"                           
-#>  [2] "[ 2021-03-01 10:53:57 ] Adding LOL jobs/test.R"                 
-#>  [3] "[ 2021-03-01 10:53:57 ] Adding LOL_Schedule jobs/test.R"        
-#>  [4] "[ 2021-03-01 10:53:57 ] Adding LOL_Schedule_day jobs/test.R"    
-#>  [5] "[ 2021-03-01 10:53:57 ] Adding LMFAO jobs/test.R"               
-#>  [6] "[ 2021-03-01 10:53:57 ] Starting LOL jobs/test.R (pid: 92809)"  
-#>  [7] "[ 2021-03-01 10:53:58 ] Starting LMFAO jobs/test.R (pid: 92831)"
-#>  [8] "[ 2021-03-01 10:53:58 ] Stopping LOL"                           
-#>  [9] "[ 2021-03-01 10:53:58 ] Stopping LOL"                           
-#> [10] "[ 2021-03-01 10:53:59 ] Stopping LOL_Schedule"                  
-#> [11] "[ 2021-03-01 10:53:59 ] Stopping LOL_Schedule_day"              
-#> [12] "[ 2021-03-01 10:53:59 ] Stopping LMFAO"
+#>  [1] "[ 2021-05-24 12:21:57 ] Initializing"                           
+#>  [2] "[ 2021-05-24 12:21:57 ] Adding LOL jobs/test.R"                 
+#>  [3] "[ 2021-05-24 12:21:57 ] Adding LOL_Schedule jobs/test.R"        
+#>  [4] "[ 2021-05-24 12:21:57 ] Adding LOL_Schedule_day jobs/test.R"    
+#>  [5] "[ 2021-05-24 12:21:57 ] Adding LMFAO jobs/test.R"               
+#>  [6] "[ 2021-05-24 12:21:57 ] Starting LOL jobs/test.R (pid: 94249)"  
+#>  [7] "[ 2021-05-24 12:21:58 ] Starting LMFAO jobs/test.R (pid: 94269)"
+#>  [8] "[ 2021-05-24 12:21:58 ] Stopping LOL"                           
+#>  [9] "[ 2021-05-24 12:21:58 ] Stopping LOL"                           
+#> [10] "[ 2021-05-24 12:21:58 ] Stopping LOL_Schedule"                  
+#> [11] "[ 2021-05-24 12:21:58 ] Stopping LOL_Schedule_day"              
+#> [12] "[ 2021-05-24 12:21:58 ] Stopping LMFAO"
 ```
 
 ## Retrieving information
@@ -134,12 +141,12 @@ To know the existing tasks in an executor, you can take a look at
 ``` r
 exec_model$tasks
 #> # A tibble: 4 x 11
-#>   exec_id name  script wd    stamp               status   pid env  
-#>   <chr>   <chr> <chr>  <chr> <dttm>              <chr>  <dbl> <lis>
-#> 1 xg15    LOL   jobs/… /bgr… 2021-03-01 10:53:57 stopp… 92809 <chr…
-#> 2 xg15    LOL_… jobs/… /bgr… 2021-03-01 10:53:57 stopp…    NA <chr…
-#> 3 xg15    LOL_… jobs/… /bgr… 2021-03-01 10:53:57 stopp…    NA <chr…
-#> 4 xg15    LMFAO jobs/… /bgr… 2021-03-01 10:53:57 stopp… 92831 <chr…
+#>   exec_id name       script    wd        stamp               status   pid env   
+#>   <chr>   <chr>      <chr>     <chr>     <dttm>              <chr>  <dbl> <list>
+#> 1 xg15    LOL        jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp… 94249 <chr …
+#> 2 xg15    LOL_Sched… jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp…    NA <chr …
+#> 3 xg15    LOL_Sched… jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp…    NA <chr …
+#> 4 xg15    LMFAO      jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp… 94269 <chr …
 #> # … with 3 more variables: infinite_loop <lgl>, period <chr>, start <dttm>
 ```
 
@@ -160,12 +167,12 @@ exec_model$list_running_task()
 ``` r
 exec_model$list_running_task(next_run = T)
 #> # A tibble: 4 x 7
-#>   exec_id name  running infinite_loop period start              
-#>   <chr>   <chr> <lgl>   <lgl>         <chr>  <dttm>             
-#> 1 xg15    LOL   FALSE   TRUE          ""     2021-03-01 10:53:57
-#> 2 xg15    LOL_… FALSE   FALSE         "2 mi… 2021-03-01 10:53:57
-#> 3 xg15    LOL_… FALSE   FALSE         "day"  2021-02-27 12:50:00
-#> 4 xg15    LMFAO FALSE   TRUE          ""     2021-03-01 10:53:57
+#>   exec_id name             running infinite_loop period  start              
+#>   <chr>   <chr>            <lgl>   <lgl>         <chr>   <dttm>             
+#> 1 xg15    LOL              FALSE   TRUE          ""      2021-05-24 11:21:57
+#> 2 xg15    LOL_Schedule     FALSE   FALSE         "2 min" 2021-05-24 11:21:57
+#> 3 xg15    LOL_Schedule_day FALSE   FALSE         "day"   2021-02-27 12:50:00
+#> 4 xg15    LMFAO            FALSE   TRUE          ""      2021-05-24 11:21:57
 #> # … with 1 more variable: next_run <dttm>
 ```
 
@@ -183,5 +190,5 @@ happening in the process.
 
 ``` r
 exec_model$read_out(name = "LOL", n_tail = 50) %>% glimpse # Read the last 50 lines of the stream output of the task LOL
-#>  chr [1:4] "[1] \"xg15\"" "[1] \"LOL\"" "[1] \"2021-03-01 10:53:58 EST\"" ...
+#>  chr [1:4] "[1] \"xg15\"" "[1] \"LOL\"" "[1] \"2021-05-24 12:21:57 EDT\"" ...
 ```

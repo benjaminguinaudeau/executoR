@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## General Description
+## ExecutoR
 
 Executor orchestrates scripts: it can run, schedule and restart the
 execution of scripts. Scripts are executed in the background (similarly
@@ -16,7 +16,7 @@ id, a random one will be automatically attributed.
 # Random ID
 exec_model <- executor$new(folder = "exec_test")
 exec_model$ex_id
-#> [1] "c7eb7335"
+#> [1] "d3568bcf"
 
 # Specified id
 exec_model <- executor$new(folder = "exec_test", exec_id = "xg15")
@@ -117,18 +117,18 @@ An overall log is stored in a log vector
 
 ``` r
 exec_model$log
-#>  [1] "[ 2021-05-24 12:21:57 ] Initializing"                           
-#>  [2] "[ 2021-05-24 12:21:57 ] Adding LOL jobs/test.R"                 
-#>  [3] "[ 2021-05-24 12:21:57 ] Adding LOL_Schedule jobs/test.R"        
-#>  [4] "[ 2021-05-24 12:21:57 ] Adding LOL_Schedule_day jobs/test.R"    
-#>  [5] "[ 2021-05-24 12:21:57 ] Adding LMFAO jobs/test.R"               
-#>  [6] "[ 2021-05-24 12:21:57 ] Starting LOL jobs/test.R (pid: 94249)"  
-#>  [7] "[ 2021-05-24 12:21:58 ] Starting LMFAO jobs/test.R (pid: 94269)"
-#>  [8] "[ 2021-05-24 12:21:58 ] Stopping LOL"                           
-#>  [9] "[ 2021-05-24 12:21:58 ] Stopping LOL"                           
-#> [10] "[ 2021-05-24 12:21:58 ] Stopping LOL_Schedule"                  
-#> [11] "[ 2021-05-24 12:21:58 ] Stopping LOL_Schedule_day"              
-#> [12] "[ 2021-05-24 12:21:58 ] Stopping LMFAO"
+#>  [1] "[ 2021-05-24 12:25:00 ] Initializing"                           
+#>  [2] "[ 2021-05-24 12:25:00 ] Adding LOL jobs/test.R"                 
+#>  [3] "[ 2021-05-24 12:25:00 ] Adding LOL_Schedule jobs/test.R"        
+#>  [4] "[ 2021-05-24 12:25:00 ] Adding LOL_Schedule_day jobs/test.R"    
+#>  [5] "[ 2021-05-24 12:25:00 ] Adding LMFAO jobs/test.R"               
+#>  [6] "[ 2021-05-24 12:25:00 ] Starting LOL jobs/test.R (pid: 94491)"  
+#>  [7] "[ 2021-05-24 12:25:01 ] Starting LMFAO jobs/test.R (pid: 94511)"
+#>  [8] "[ 2021-05-24 12:25:01 ] Stopping LOL"                           
+#>  [9] "[ 2021-05-24 12:25:01 ] Stopping LOL"                           
+#> [10] "[ 2021-05-24 12:25:01 ] Stopping LOL_Schedule"                  
+#> [11] "[ 2021-05-24 12:25:01 ] Stopping LOL_Schedule_day"              
+#> [12] "[ 2021-05-24 12:25:01 ] Stopping LMFAO"
 ```
 
 ## Retrieving information
@@ -143,10 +143,10 @@ exec_model$tasks
 #> # A tibble: 4 x 11
 #>   exec_id name       script    wd        stamp               status   pid env   
 #>   <chr>   <chr>      <chr>     <chr>     <dttm>              <chr>  <dbl> <list>
-#> 1 xg15    LOL        jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp… 94249 <chr …
-#> 2 xg15    LOL_Sched… jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp…    NA <chr …
-#> 3 xg15    LOL_Sched… jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp…    NA <chr …
-#> 4 xg15    LMFAO      jobs/tes… /bgr/exe… 2021-05-24 12:21:57 stopp… 94269 <chr …
+#> 1 xg15    LOL        jobs/tes… /bgr/exe… 2021-05-24 12:25:00 stopp… 94491 <chr …
+#> 2 xg15    LOL_Sched… jobs/tes… /bgr/exe… 2021-05-24 12:25:00 stopp…    NA <chr …
+#> 3 xg15    LOL_Sched… jobs/tes… /bgr/exe… 2021-05-24 12:25:00 stopp…    NA <chr …
+#> 4 xg15    LMFAO      jobs/tes… /bgr/exe… 2021-05-24 12:25:00 stopp… 94511 <chr …
 #> # … with 3 more variables: infinite_loop <lgl>, period <chr>, start <dttm>
 ```
 
@@ -169,10 +169,10 @@ exec_model$list_running_task(next_run = T)
 #> # A tibble: 4 x 7
 #>   exec_id name             running infinite_loop period  start              
 #>   <chr>   <chr>            <lgl>   <lgl>         <chr>   <dttm>             
-#> 1 xg15    LOL              FALSE   TRUE          ""      2021-05-24 11:21:57
-#> 2 xg15    LOL_Schedule     FALSE   FALSE         "2 min" 2021-05-24 11:21:57
+#> 1 xg15    LOL              FALSE   TRUE          ""      2021-05-24 11:25:00
+#> 2 xg15    LOL_Schedule     FALSE   FALSE         "2 min" 2021-05-24 11:25:00
 #> 3 xg15    LOL_Schedule_day FALSE   FALSE         "day"   2021-02-27 12:50:00
-#> 4 xg15    LMFAO            FALSE   TRUE          ""      2021-05-24 11:21:57
+#> 4 xg15    LMFAO            FALSE   TRUE          ""      2021-05-24 11:25:00
 #> # … with 1 more variable: next_run <dttm>
 ```
 
@@ -190,5 +190,5 @@ happening in the process.
 
 ``` r
 exec_model$read_out(name = "LOL", n_tail = 50) %>% glimpse # Read the last 50 lines of the stream output of the task LOL
-#>  chr [1:4] "[1] \"xg15\"" "[1] \"LOL\"" "[1] \"2021-05-24 12:21:57 EDT\"" ...
+#>  chr [1:4] "[1] \"xg15\"" "[1] \"LOL\"" "[1] \"2021-05-24 12:25:00 EDT\"" ...
 ```

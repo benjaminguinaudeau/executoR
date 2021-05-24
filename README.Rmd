@@ -17,7 +17,7 @@ devtools::load_all()
 # devtools::install()
 ```
 
-## General Description
+## ExecutoR
 
 Executor orchestrates scripts: it can run, schedule and restart the execution of scripts. Scripts are executed in the background (similarly to rstudio jobs). Executor (unlike rstudio jobs) can be used in any environment, even if rstudio is not running. 
 

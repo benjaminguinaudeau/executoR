@@ -127,7 +127,7 @@ executor <- R6::R6Class(
         cat("\n\n\n") ; cli::cli_alert_info(as.character(Sys.time()))
 
         tasks <- self$list_running_task(next_run = T)
-        cat(capture.output(select(tasks, -start)), sep = "\n")
+        # cat(capture.output(select(tasks, -start)), sep = "\n")
 
 
         if(any(!tasks$infinite_loop)){

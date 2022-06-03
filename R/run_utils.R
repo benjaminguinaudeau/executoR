@@ -23,10 +23,10 @@ run_script <- function(name, script, wd = getwd(), log = getwd(), env = NULL){
 }
 
 #' @export
-is_running <- function (script, env = NULL, scr_name = NULL){
+is_running <- function (script, env = NULL, task_id = NULL){
 
   if(!is.null(scr_name)){
-    nrow(get_proc(cmd_regex = script, args_to_select = c("SCR_NAME" = scr_name))) > 0
+    nrow(get_proc(cmd_regex = script, args_to_select = c("TASK_ID" = task_id))) > 0
   } else {
     nrow(get_proc(cmd_regex = script, args_to_select = env)) > 0
   }

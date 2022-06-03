@@ -27,15 +27,13 @@ executor <- R6::R6Class(
 
       if(name %in% self$tasks$name){warning(glue::glue("Skipping {name} because a task named {name} already exists")) ; return()}
 
-      env <- c(env, "EXECUTOR_ID" = self$ex_id) %>%
+      env <- c(env, "EXECUTOR_ID" = self$ex_id, "TASK_ID" = paste0(self$ex_id, name)) %>%
         list
 
       self$tasks <- dplyr::bind_rows(self$tasks, tibble::tibble(exec_id = self$ex_id, name = name, script = script, wd = wd, stamp = Sys.time(), status = "stopped", env = env,
                                                                 infinite_loop = infinite_loop, period = period, start = start)) %>%
         dplyr::filter(!is.na(name)) %>%
-        dplyr::mutate(src_name = env %>% purrr::map_chr(~{
-          if(!is.null(env[["SRC_NAME"]])) return(env[["SRC_NAME"]]) else return("")
-        })) %>%
+        dplyr::mutate(task_id = paste0(self$ex_id, name)) %>%
         unique
 
       self$add_log(glue::glue("Adding {name} {script}"))
@@ -105,18 +103,12 @@ executor <- R6::R6Class(
     list_running_task = function(next_run = F){
 
       if(!next_run){
-        if(any(self$tasks$src_name != "")){
-          self$tasks %>%
-            dplyr::mutate(running = purrr::map2_lgl(script, src_name, is_running)) %>%
+        self$tasks %>%
+            dplyr::mutate(running = purrr::map2_lgl(script, task_id, ~is_running(cmd_regex = .x, task_id = .y))) %>%
             dplyr::select(exec_id, name, running, infinite_loop, period)
-        } else {
-          self$tasks %>%
-            dplyr::mutate(running = purrr::map2_lgl(script, env, is_running)) %>%
-            dplyr::select(exec_id, name, running, infinite_loop, period)
-        }
       } else {
         self$tasks %>%
-          dplyr::mutate(running = purrr::map2_lgl(script, env, is_running),
+          dplyr::mutate(running = purrr::map2_lgl(script, task_id, ~is_running(cmd_regex = .x, task_id = .y)),
                         next_run = lubridate::as_datetime(purrr::map2_dbl(period, start, ~scheduled_at(period = .x, start = .y, return_next = T)), tz = "EST")) %>%
           dplyr::select(exec_id, name, running, infinite_loop, period, start, next_run)
       }

@@ -33,6 +33,9 @@ executor <- R6::R6Class(
       self$tasks <- dplyr::bind_rows(self$tasks, tibble::tibble(exec_id = self$ex_id, name = name, script = script, wd = wd, stamp = Sys.time(), status = "stopped", env = env,
                                                                 infinite_loop = infinite_loop, period = period, start = start)) %>%
         dplyr::filter(!is.na(name)) %>%
+        dplyr::mutate(src_name = env %>% purrr::map_chr(~{
+          if(!is.null(env[["SRC_NAME"]])) return(env[["SRC_NAME"]]) else return("")
+        })) %>%
         unique
 
       self$add_log(glue::glue("Adding {name} {script}"))
@@ -102,9 +105,15 @@ executor <- R6::R6Class(
     list_running_task = function(next_run = F){
 
       if(!next_run){
-        self$tasks %>%
-          dplyr::mutate(running = purrr::map2_lgl(script, env, is_running)) %>%
-          dplyr::select(exec_id, name, running, infinite_loop, period)
+        if(any(self$tasks$src_name != "")){
+          self$tasks %>%
+            dplyr::mutate(running = purrr::map2_lgl(script, src_name, is_running)) %>%
+            dplyr::select(exec_id, name, running, infinite_loop, period)
+        } else {
+          self$tasks %>%
+            dplyr::mutate(running = purrr::map2_lgl(script, env, is_running)) %>%
+            dplyr::select(exec_id, name, running, infinite_loop, period)
+        }
       } else {
         self$tasks %>%
           dplyr::mutate(running = purrr::map2_lgl(script, env, is_running),

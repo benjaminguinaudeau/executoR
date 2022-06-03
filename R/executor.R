@@ -104,11 +104,11 @@ executor <- R6::R6Class(
 
       if(!next_run){
         self$tasks %>%
-            dplyr::mutate(running = purrr::map2_lgl(script, task_id, ~is_running(cmd_regex = .x, task_id = .y))) %>%
+            dplyr::mutate(running = purrr::map2_lgl(script, task_id, ~is_running(script = .x, task_id = .y))) %>%
             dplyr::select(exec_id, name, running, infinite_loop, period)
       } else {
         self$tasks %>%
-          dplyr::mutate(running = purrr::map2_lgl(script, task_id, ~is_running(cmd_regex = .x, task_id = .y)),
+          dplyr::mutate(running = purrr::map2_lgl(script, task_id, ~is_running(script = .x, task_id = .y)),
                         next_run = lubridate::as_datetime(purrr::map2_dbl(period, start, ~scheduled_at(period = .x, start = .y, return_next = T)), tz = "EST")) %>%
           dplyr::select(exec_id, name, running, infinite_loop, period, start, next_run)
       }
